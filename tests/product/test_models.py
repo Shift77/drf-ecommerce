@@ -1,5 +1,5 @@
 import pytest
-
+from django.core.exceptions import ValidationError
 pytestmark = pytest.mark.django_db
 
 
@@ -27,3 +27,19 @@ class TestProductModel:
         obj = product_factory(name='product_test')
         
         assert obj.__str__() == 'product_test'
+        
+class TestProductLineModel:
+    
+    def test_clean_method(self, product_line_factory, product_factory):
+        prod = product_factory()
+        obj_1 = product_line_factory(order=1, product=prod)
+        
+        with pytest.raises(ValidationError):
+            obj_2 = product_line_factory(order=1, product=prod)
+            obj_2.clean()
+        
+    def test_str_method(self, product_line_factory):
+        
+        obj = product_line_factory(sku='555')
+        
+        assert obj.__str__() == '555'
