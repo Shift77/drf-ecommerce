@@ -43,3 +43,15 @@ class TestProductLineModel:
         obj = product_line_factory(sku='555')
         
         assert obj.__str__() == '555'
+        
+class TestProductImage:
+    
+    def test_str_method(self, product_image_factory, product_line_factory, product_factory):
+        
+        prod = product_factory(name='test')
+        
+        line = product_line_factory(product=prod)
+        
+        img = product_image_factory(product_line=line, url='test_url')
+        
+        assert img.__str__() == 'test_url'

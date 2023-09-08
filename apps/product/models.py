@@ -75,4 +75,23 @@ class ProductLine(models.Model):
         for q in queryset:
             if self.id != q.id and self.order == q.order:
                 raise ValidationError('Order value is duplicated!')
-        
+
+
+class ProductImage(models.Model):
+    alternative_text = models.CharField(max_length=255)
+    url = models.ImageField(upload_to='images/')
+    product_line = models.ForeignKey(ProductLine, on_delete=models.CASCADE, related_name='product_image')
+    order = OrderField(unique_field='product_line', blank=True)
+    
+    
+    def __str__(self):
+        return str(self.url)
+    
+    
+    
+    
+    
+    
+    
+    
+    

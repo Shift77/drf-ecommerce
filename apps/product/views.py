@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from .serializers import CategorySerializer, BrandSerializer, ProductSerializer
 from drf_spectacular.utils import extend_schema
 from .models import Category, Brand, Product
+from django.db.models import Prefetch
 
 
 class CategoryViewSet(viewsets.ViewSet):
@@ -39,7 +40,10 @@ class ProductViewSet(viewsets.ViewSet):
     
     @extend_schema(responses=ProductSerializer)
     def retrieve(self, request, slug=None):
-        serializer = ProductSerializer(self.queryset.filter(slug=slug).select_related('category', 'brand'), many=True)
+        serializer = ProductSerializer(
+            self.queryset.filter(slug=slug).select_related('category', 'brand')
+            .prefetch_related(Prefetch('product_line__product_image'))
+            ,many=True)
         return Response(serializer.data)
     
     @action(
@@ -48,7 +52,7 @@ class ProductViewSet(viewsets.ViewSet):
         url_path=r'category/(?P<category_name>\w+)/all',
         url_name='all', 
     )
-    # @extend_schema(responses=ProductSerializer)
+    @extend_schema(responses=ProductSerializer)
     def list_by_category_name(self, request, category_name=None):
         serializer = ProductSerializer(self.queryset.filter(category__name=category_name), 
                                        many=True)
