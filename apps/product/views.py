@@ -31,6 +31,8 @@ class ProductViewSet(viewsets.ViewSet):
     
     queryset = Product.objects.actives_only() # Calling a custom query set function created in .models.py
     
+    serializer_class = ProductSerializer
+    
     lookup_field = 'slug'
     
     @extend_schema(responses=ProductSerializer)
@@ -43,7 +45,8 @@ class ProductViewSet(viewsets.ViewSet):
         serializer = ProductSerializer(
             self.queryset.filter(slug=slug).select_related('category', 'brand')
             .prefetch_related(Prefetch('product_line__product_image'))
-            ,many=True)
+            .prefetch_related(Prefetch('product_line__attribute_value__attribute')),
+             many=True)
         return Response(serializer.data)
     
     @action(

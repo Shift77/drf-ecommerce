@@ -52,11 +52,33 @@ class Product(models.Model):
                               on_delete=models.CASCADE)
     is_active = models.BooleanField(default=False)
     
+    product_type = models.ForeignKey('ProductType', on_delete=models.PROTECT, related_name='product')
+
+    
     objects = ActiveQueryset.as_manager() # appending a new queryset function to object manager 
         
     def __str__(self):
         return self.name
     
+    
+class Attribute(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
+    
+    def __str__(self) -> str:
+        return self.name
+        
+
+class AttributeValue(models.Model):
+    attribute_value = models.CharField(max_length=100)
+    attribute = models.ForeignKey(
+        Attribute, 
+        on_delete=models.CASCADE, 
+        related_name='attribute_value'
+        )   
+    
+    def __str__(self) -> str:
+        return f'{self.attribute} : {self.attribute_value}'
 
 class ProductLine(models.Model):
     price = models.DecimalField(max_digits=12, decimal_places=2)
@@ -65,6 +87,14 @@ class ProductLine(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_line')
     order = OrderField(unique_field='product', blank=True)
     is_active = models.BooleanField(default=False)
+    attribute_value = models.ManyToManyField(
+        AttributeValue,     
+        through='ProductLineAttributeValue',
+        related_name='product_line',
+        )    
+    
+    product_type = models.ForeignKey('ProductType', null=True, blank=True,on_delete=models.PROTECT)
+
     
     def __str__(self):
         return self.sku
@@ -77,6 +107,26 @@ class ProductLine(models.Model):
                 raise ValidationError('Order value is duplicated!')
 
 
+class ProductLineAttributeValue(models.Model):
+    product_line = models.ForeignKey(ProductLine, on_delete=models.CASCADE)
+    attribute_value = models.ForeignKey(AttributeValue, on_delete=models.CASCADE)
+    
+    class Meta:
+        unique_together = ('product_line', 'attribute_value')
+    
+    
+    def clean(self):
+        
+        query = ProductLineAttributeValue.objects.filter(attribute_value=self.attribute_value).filter(product_line=self.product_line).exists()
+        
+        if not query:
+            q = Attribute.objects.filter(
+                attribute_value__product_line=self.product_line
+                ).values_list('pk', flat=True)
+            if self.attribute_value.attribute.id in q:
+                raise ValidationError('Duplicate attribute!')
+
+
 class ProductImage(models.Model):
     alternative_text = models.CharField(max_length=255)
     url = models.ImageField(upload_to='images/')
@@ -86,8 +136,26 @@ class ProductImage(models.Model):
     
     def __str__(self):
         return str(self.url)
+
+
+class ProductType(models.Model):
+    name = models.CharField(max_length=255)
+    attribute = models.ManyToManyField(Attribute, through='ProductTypeAttribute', related_name='product_type')
+    
+    def __str__(self):
+        return str(self.name)
     
     
+class ProductTypeAttribute(models.Model):
+    product_type = models.ForeignKey(ProductType, on_delete=models.PROTECT,
+                                     related_name='product_type_attribute_p')
+    attribute = models.ForeignKey(Attribute, on_delete=models.PROTECT,
+                                  related_name='product_type_attribute_a')
+    
+    class Meta:
+        unique_together = ('product_type', 'attribute')
+    
+
     
     
     

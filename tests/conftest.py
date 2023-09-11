@@ -6,7 +6,10 @@ from .factories import (
     BrandFactory, 
     ProductFactory, 
     ProductLineFactory, 
-    ProductImageFactory
+    ProductImageFactory,
+    ProductTypeFactory,
+    AttributeFactory,
+    AttributeValueFactory
     )
 
 register(CategoryFactory)
@@ -14,6 +17,9 @@ register(BrandFactory)
 register(ProductFactory)
 register(ProductLineFactory)
 register(ProductImageFactory)
+register(ProductTypeFactory)
+register(AttributeValueFactory)
+register(AttributeFactory)
 
 @pytest.fixture
 def api_client():

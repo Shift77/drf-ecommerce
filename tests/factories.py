@@ -1,13 +1,44 @@
 import factory
 
-from apps.product.models import Category, Brand, Product, ProductLine, ProductImage
+from apps.product.models import (
+    Category, 
+    Brand, 
+    Product, 
+    ProductLine, 
+    ProductImage, 
+    ProductType,
+    Attribute,
+    AttributeValue
+    )
 
 
+class AttributeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Attribute
+    name = 'test'
+        
+
+class AttributeValueFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Attribute
+    name = 'test'
+
+        
 class CategoryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Category
         
     name='test'
+
+class ProductTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductType
+        
+    @factory.post_generation
+    def attribute(self, create, extracted, **kwargs):
+        if not create or  not extracted:
+            return
+        self.attribute.add(*extracted)
 
 class BrandFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -15,12 +46,16 @@ class BrandFactory(factory.django.DjangoModelFactory):
        
     name='test'
 
+
 class ProductFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Product 
         
     name = 'test'
+    product_type = factory.SubFactory(ProductTypeFactory)
     
+    
+
 class ProductLineFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ProductLine
@@ -30,7 +65,13 @@ class ProductLineFactory(factory.django.DjangoModelFactory):
     stock_qty = 5
     product = factory.SubFactory(ProductFactory)
     
-
+    @factory.post_generation
+    def attribute_value(self, create, extracted, **kwargs):
+        if not create or  not extracted:
+            return
+        self.attribute_value.add(*extracted)
+    
+    
 class ProductImageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ProductImage
@@ -39,3 +80,4 @@ class ProductImageFactory(factory.django.DjangoModelFactory):
     alternative_text = 'alt_text'
     product_line = factory.SubFactory(ProductLineFactory)
     order = 1
+
